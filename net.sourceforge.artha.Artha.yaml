@@ -1,6 +1,6 @@
 app-id: net.sourceforge.artha.Artha
 runtime: org.freedesktop.Platform
-runtime-version: '23.08'
+runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
 command: artha
 
@@ -26,49 +26,53 @@ cleanup:
   - /lib/*.a
   - '*.a'
   - '*.la'
-    
+
 modules:
 
 - shared-modules/gtk2/gtk2.json 
 - shared-modules/dbus-glib/dbus-glib.json
 
-# Wordnet 3.0 Needs tcl 8.5.x 
-- name: tcl8.5.19
+# Wordnet 3.0 Needs tcl 8.6.x
+- name: tcl8
   sources:
   - type: archive
-    url: ftp://ftp.tcl.tk/pub/tcl/tcl8_5/tcl8.5.19-src.tar.gz
-    sha256: d3f04456da873d17f02efc30734b0300fb6c3b85028d445fe284b83253a6db18
+    url: https://sourceforge.net/projects/tcl/files/Tcl/8.6.17/tcl8.6.17-src.tar.gz
+    sha256: a3903371efcce8a405c5c245d029e9f6850258a60fa3761c4d58995610949b31
   subdir: unix
   build-options:
     no-debuginfo: true
   post-install:
-  - make install-private-headers 
-  - ln -v -sf tclsh8.6 ${FLATPAK_DEST}/bin/tclsh 
-  - chmod -v 755 ${FLATPAK_DEST}/lib/libtcl8.5.so
+  - make install-private-headers
+  - ln -v -sf tclsh8.6 ${FLATPAK_DEST}/bin/tclsh
+  - chmod -v 755 ${FLATPAK_DEST}/lib/libtcl8.6.so
 
-# Wordnet 3.0 Needs tk 8.5.x
-- name: tk8.5.19
+# Wordnet 3.0 Needs tk 8.6.x
+- name: tk8
   sources:
   - type: archive
-    url: ftp://ftp.tcl.tk/pub/tcl/tcl8_5/tk8.5.19-src.tar.gz
-    sha256: 407af1de167477d598bd6166d84459a3bdccc2fb349360706154e646a9620ffa
+    url: https://sourceforge.net/projects/tcl/files/Tcl/8.6.17/tk8.6.17-src.tar.gz
+    sha256: e4982df6f969c08bf9dd858a6891059b4a3f50dc6c87c10abadbbe2fc4838946
   subdir: unix
   post-install:
-  - make install-private-headers 
-  - ln -v -sf wish8.6 ${FLATPAK_DEST}/bin/wish 
-  - chmod -v 755 ${FLATPAK_DEST}/lib/libtk8.5.so
+  - make install-private-headers
+  - ln -v -sf wish8.6 ${FLATPAK_DEST}/bin/wish
+  - chmod -v 755 ${FLATPAK_DEST}/lib/libtk8.6.so
 
 - name: wordnet
   buildsystem: autotools
+  build-options:
+    cflags: -Wno-error=implicit-int -Wno-error=implicit-function-declaration
+      -Wno-error=incompatible-pointer-types
   config-opts:
   - --with-tcl=/app/lib
   - --with-tk=/app/lib
-  - --enable-static=no 
+  - --enable-static=no
   sources:
   - type: archive
     url: http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.bz2
     sha256: 6c492d0c7b4a40e7674d088191d3aa11f373bb1da60762e098b8ee2dda96ef22
-    patch: 
+  - type: patch
+    path: fix-api-changes.patch
 
 - name: artha
   buildsystem: autotools
@@ -85,6 +89,3 @@ modules:
   - desktop-file-edit --set-icon=net.sourceforge.artha.Artha ${FLATPAK_DEST}/share/applications/artha.desktop
   - mkdir -p ${FLATPAK_DEST}/share/metainfo
   - install -Dm644 net.sourceforge.artha.Artha.metainfo.xml ${FLATPAK_DEST}/share/metainfo
-
-
-
